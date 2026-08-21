@@ -1,0 +1,9 @@
+{
+  "neighbor_window": 2,
+  "rerank_top_n": 6,
+  "rerank_candidates": 16,
+  "max_context_chars": 12000,
+  "frequency_penalty": 0.15,
+  "repeat_penalty": 1.12,
+  "max_answer_tokens": 1100
+}

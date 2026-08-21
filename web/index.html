@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>پرسش و پاسخ از روی کتاب</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #161a21; --panel2: #1d222b; --line: #272d38;
+    --text: #e6e9ef; --muted: #9aa4b2; --accent: #4f9cf9; --accent2: #2b6fd1;
+    --ok: #3ecf8e; --warn: #f0a832; --err: #f0655c; --radius: 12px;
+  }
+  @media (prefers-color-scheme: light) {
+    :root { --bg:#f6f7f9; --panel:#fff; --panel2:#eef1f5; --line:#dde2ea;
+            --text:#16181d; --muted:#5c6674; --accent:#1f6feb; --accent2:#1a5fc8; }
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    font-family: Vazirmatn, "Segoe UI", Tahoma, "Iranian Sans", sans-serif;
+    background: var(--bg); color: var(--text); display: flex; height: 100vh;
+    overflow: hidden; max-width: 100vw;
+    font-size: 15px; line-height: 1.85;
+  }
+  aside {
+    width: 320px; flex: 0 0 320px; min-width: 0; background: var(--panel);
+    border-left: 1px solid var(--line);
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+  @media (max-width: 900px) { aside { width: 260px; flex-basis: 260px; } }
+  aside header { padding: 16px; border-bottom: 1px solid var(--line); }
+  aside h1 { font-size: 16px; margin: 0 0 4px; }
+  aside .sub { font-size: 12px; color: var(--muted); }
+  #drop {
+    margin: 14px; padding: 22px 12px; border: 1.5px dashed var(--line); border-radius: var(--radius);
+    text-align: center; color: var(--muted); font-size: 13px; cursor: pointer; transition: .15s;
+  }
+  #drop:hover, #drop.over { border-color: var(--accent); color: var(--text); background: var(--panel2); }
+  .doclist { flex: 1; overflow-y: auto; padding: 0 12px 12px; }
+  .doc {
+    background: var(--panel2); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 10px 12px; margin-bottom: 8px; font-size: 13px;
+  }
+  .doc .t { font-weight: 600; display: flex; gap: 6px; align-items: flex-start; }
+  .doc .t input { margin-top: 6px; }
+  .doc .t span { flex: 1; word-break: break-word; }
+  .doc .m { color: var(--muted); font-size: 11.5px; margin-top: 4px; }
+  .doc .del { background: none; border: 0; color: var(--muted); cursor: pointer; font-size: 15px; padding: 0 2px; }
+  .doc .del:hover { color: var(--err); }
+  .bar { height: 4px; background: var(--line); border-radius: 4px; overflow: hidden; margin-top: 8px; }
+  .bar > i { display: block; height: 100%; background: var(--accent); width: 0; transition: width .3s; }
+  .warn { color: var(--warn); font-size: 11.5px; margin-top: 5px; }
+  #cancelall {
+    margin: 0 14px 10px; padding: 7px; background: none; color: var(--err); cursor: pointer;
+    border: 1px solid var(--line); border-radius: var(--radius); font: inherit; font-size: 12.5px;
+  }
+  #cancelall:hover { border-color: var(--err); }
+  aside footer { padding: 10px 14px; border-top: 1px solid var(--line); font-size: 11.5px; color: var(--muted); }
+  .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--err); margin-left: 6px; }
+  .dot.on { background: var(--ok); }
+
+  main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  #chat { flex: 1; overflow-y: auto; padding: 26px 32px 10px; scroll-behavior: smooth; }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  .msg { margin-bottom: 26px; }
+  .msg .who { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .bubble {
+    background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 14px 16px; white-space: pre-wrap; word-wrap: break-word;
+  }
+  .msg.user .bubble { background: var(--panel2); }
+  .cite {
+    display: inline-block; background: var(--accent); color: #fff; border-radius: 6px;
+    font-size: 11px; padding: 0 6px; margin: 0 2px; cursor: pointer; vertical-align: middle;
+    font-family: inherit; border: 0; line-height: 1.7;
+  }
+  .cite:hover { background: var(--accent2); }
+  .srcbox { margin-top: 10px; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+  .srcbox > summary {
+    cursor: pointer; padding: 9px 14px; background: var(--panel2); font-size: 12.5px; color: var(--muted);
+    user-select: none;
+  }
+  .src { padding: 11px 14px; border-top: 1px solid var(--line); font-size: 13px; }
+  .src.hl { background: rgba(79,156,249,.09); }
+  .src .h { font-size: 12px; color: var(--accent); margin-bottom: 5px; font-weight: 600; }
+  .src .b { color: var(--muted); max-height: 5.6em; overflow: hidden; position: relative; }
+  .src.open .b { max-height: none; }
+  .src .more { font-size: 11.5px; color: var(--accent); cursor: pointer; margin-top: 4px; display: inline-block; }
+  .stage { font-size: 12px; color: var(--muted); }
+  .empty { text-align: center; color: var(--muted); margin-top: 14vh; font-size: 14px; }
+  .empty b { color: var(--text); font-size: 17px; display: block; margin-bottom: 8px; }
+  .chip { display:inline-block; background: var(--panel2); border:1px solid var(--line); border-radius: 20px;
+          padding: 4px 12px; margin: 4px 3px; font-size: 12.5px; cursor: pointer; }
+  .chip:hover { border-color: var(--accent); }
+
+  form#ask { padding: 12px 32px 20px; border-top: 1px solid var(--line); background: var(--panel); }
+  .askwrap { max-width: 860px; margin: 0 auto; display: flex; gap: 10px; align-items: flex-end; }
+  textarea {
+    flex: 1; resize: none; background: var(--panel2); color: var(--text); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 12px 14px; font: inherit; max-height: 180px; min-height: 48px;
+  }
+  textarea:focus { outline: none; border-color: var(--accent); }
+  button.send {
+    background: var(--accent); color: #fff; border: 0; border-radius: var(--radius); padding: 0 22px;
+    height: 48px; font: inherit; font-weight: 600; cursor: pointer;
+  }
+  button.send:disabled { opacity: .5; cursor: default; }
+  .opts { max-width: 860px; margin: 8px auto 0; font-size: 12px; color: var(--muted); display: flex; gap: 16px; flex-wrap: wrap; }
+  .opts label { cursor: pointer; }
+  .banner { background: rgba(240,101,92,.12); border: 1px solid var(--err); color: var(--err);
+            padding: 9px 14px; border-radius: var(--radius); font-size: 12.5px; margin: 0 auto 14px; max-width: 860px; }
+</style>
+</head>
+<body>
+<aside>
+  <header>
+    <h1>پرسش و پاسخ از روی کتاب شما</h1>
+    <div class="sub">پاسخ‌ها فقط از روی فایل‌های بارگذاری‌شده ساخته می‌شوند</div>
+  </header>
+  <div id="drop">
+    فایل‌ها را اینجا رها کنید<br /><span style="font-size:11.5px">PDF، DOCX، TXT، MD، HTML</span>
+    <input id="file" type="file" multiple hidden accept=".pdf,.docx,.txt,.md,.markdown,.htm,.html" />
+  </div>
+  <button id="cancelall" style="display:none">لغو همه نمایه‌سازی‌ها</button>
+  <div class="doclist" id="docs"></div>
+  <footer>
+    <div><span class="dot" id="llmdot"></span><span id="llmtxt">در حال بررسی مدل…</span></div>
+    <div id="stats" style="margin-top:4px"></div>
+  </footer>
+</aside>
+
+<main>
+  <div id="chat"><div class="wrap" id="thread">
+    <div class="empty" id="empty">
+      <b>یک یا چند فایل بارگذاری کنید</b>
+      سپس هر سؤالی دارید بپرسید. پاسخ فقط از روی همان فایل‌ها ساخته می‌شود و شماره صفحه‌ی هر ادعا ذکر می‌شود.
+    </div>
+  </div></div>
+  <form id="ask">
+    <div class="askwrap">
+      <textarea id="q" rows="1" placeholder="سؤالتان را بنویسید…  (Enter برای ارسال، Shift+Enter برای خط جدید)"></textarea>
+      <button class="send" type="submit" id="send">ارسال</button>
+    </div>
+    <div class="opts">
+      <label><input type="checkbox" id="mq" checked /> بازنویسی خودکار پرسش</label>
+      <label><input type="checkbox" id="rr" checked /> بازرتبه‌بندی دقیق</label>
+      <label><input type="checkbox" id="scoped" /> فقط فایل‌های تیک‌خورده</label>
+      <span id="stage" class="stage"></span>
+    </div>
+  </form>
+</main>
+
+<script>
+const $ = s => document.querySelector(s);
+const thread = $('#thread');
+let docsCache = [];
+let busy = false;
+let history = [];
+
+function esc(s){ return s.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+function renderMd(t){
+  let h = esc(t);
+  h = h.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+  h = h.replace(/`([^`]+)`/g, '<code>$1</code>');
+  h = h.replace(/\[[Ss](\d+)\]/g, (m,n) => `<button class="cite" data-s="${n}">S${n}</button>`);
+  return h;
+}
+
+async function refreshStatus(){
+  try {
+    const s = await (await fetch('/api/status')).json();
+    $('#llmdot').className = 'dot' + (s.llm_ready ? ' on' : '');
+    $('#llmtxt').textContent = s.llm_ready ? s.llm : s.llm;
+    $('#stats').textContent = `${s.documents} سند · ${s.chunks} قطعه · ${s.embed_model.split('/').pop()}`;
+  } catch(e){}
+}
+
+async function refreshDocs(){
+  const r = await (await fetch('/api/documents')).json();
+  docsCache = r.documents;
+  const el = $('#docs');
+  const jobsHtml = el.querySelectorAll('.doc.job');
+  el.innerHTML = '';
+  jobsHtml.forEach(j => el.appendChild(j));
+  for (const d of docsCache) {
+    const div = document.createElement('div');
+    div.className = 'doc';
+    div.innerHTML = `<div class="t"><input type="checkbox" class="pick" value="${d.id}" checked />
+        <span>${esc(d.title || d.original_name)}</span>
+        <button class="del" title="حذف">×</button></div>
+      <div class="m">${d.pages} صفحه · ${d.chunks} قطعه</div>
+      ${(d.warnings||[]).map(w=>`<div class="warn">${esc(w)}</div>`).join('')}`;
+    div.querySelector('.del').onclick = async () => {
+      if (!confirm('این سند از نمایه حذف شود؟')) return;
+      await fetch('/api/documents/' + d.id, { method: 'DELETE' });
+      refreshDocs(); refreshStatus();
+    };
+    el.appendChild(div);
+  }
+  if (docsCache.length) $('#empty')?.remove();
+}
+
+const drop = $('#drop'), fileInput = $('#file');
+drop.onclick = () => fileInput.click();
+fileInput.onchange = () => { if (fileInput.files.length) upload(fileInput.files); fileInput.value=''; };
+['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
+['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', e => { if (e.dataTransfer.files.length) upload(e.dataTransfer.files); });
+document.addEventListener('dragover', e => e.preventDefault());
+document.addEventListener('drop', e => e.preventDefault());
+
+async function upload(files){
+  const busyNames = new Set([...document.querySelectorAll('.doc.job .t span')].map(e => e.textContent));
+  const fresh = [...files].filter(f => !busyNames.has(f.name));
+  const skipped = files.length - fresh.length;
+  if (skipped) {
+    alert(`${skipped} فایل نادیده گرفته شد چون همین حالا در حال نمایه‌سازی است.`);
+    if (!fresh.length) return;
+  }
+  const dupes = fresh.filter(f => docsCache.some(d => d.original_name === f.name));
+  if (dupes.length && !confirm(`${dupes.length} فایل از قبل نمایه شده است. دوباره نمایه شود؟`)) return;
+
+  const fd = new FormData();
+  for (const f of fresh) fd.append('files', f);
+  const res = await fetch('/api/upload', { method: 'POST', body: fd });
+  if (!res.ok) { alert('خطا در بارگذاری'); return; }
+  const { jobs } = await res.json();
+  for (const j of jobs) addJobCard(j);
+  pollJobs();
+}
+
+function addJobCard(j){
+  const el = document.createElement('div');
+  el.className = 'doc job';
+  el.id = 'job-' + j.id;
+  el.innerHTML = `<div class="t"><span>${esc(j.filename)}</span>
+      <button class="del" title="لغو">×</button></div>
+    <div class="m js">در صف…</div><div class="bar"><i></i></div>`;
+  el.querySelector('.del').onclick = async () => {
+    await fetch(`/api/jobs/${j.id}/cancel`, { method: 'POST' });
+    pollJobs();
+  };
+  $('#docs').prepend(el);
+}
+
+async function cancelAll(){
+  if (!confirm('همه نمایه‌سازی‌های در جریان و در صف لغو شوند؟')) return;
+  await fetch('/api/jobs/cancel-all', { method: 'POST' });
+  pollJobs();
+}
+
+let pollTimer = null;
+async function pollJobs(){
+  clearTimeout(pollTimer);
+  const { jobs } = await (await fetch('/api/jobs')).json();
+  let active = false;
+  for (const j of jobs) {
+    // indexing runs server-side, so a reload must re-attach to jobs already running
+    if (!document.getElementById('job-' + j.id) && j.status !== 'done' && j.status !== 'error') {
+      addJobCard(j);
+    }
+    const el = document.getElementById('job-' + j.id);
+    if (!el) continue;
+    if (j.status === 'done') { el.remove(); refreshDocs(); refreshStatus(); continue; }
+    if (j.status === 'cancelled') { el.remove(); continue; }
+    if (j.status === 'error') {
+      el.querySelector('.js').innerHTML = `<span style="color:var(--err)">خطا: ${esc(j.message)}</span>`;
+      el.querySelector('.bar')?.remove();
+      continue;
+    }
+    active = true;
+    el.querySelector('.js').textContent = j.message || j.status;
+    el.querySelector('.bar > i').style.width = (j.progress * 100) + '%';
+  }
+  const btn = $('#cancelall');
+  btn.style.display = active ? 'block' : 'none';
+  if (active) pollTimer = setTimeout(pollJobs, 700);
+}
+
+const q = $('#q');
+q.addEventListener('input', () => { q.style.height='auto'; q.style.height = Math.min(q.scrollHeight,180)+'px'; });
+q.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); $('#ask').requestSubmit(); }
+});
+
+$('#ask').onsubmit = async e => {
+  e.preventDefault();
+  if (busy) return;
+  const text = q.value.trim();
+  if (!text) return;
+  q.value = ''; q.style.height = 'auto';
+  await ask(text);
+};
+
+function addMsg(role, html){
+  const d = document.createElement('div');
+  d.className = 'msg ' + role;
+  d.innerHTML = `<div class="who">${role === 'user' ? 'شما' : 'دستیار'}</div><div class="bubble"></div>`;
+  d.querySelector('.bubble').innerHTML = html;
+  thread.appendChild(d);
+  $('#chat').scrollTop = $('#chat').scrollHeight;
+  return d;
+}
+
+function renderSources(node, sources, cited){
+  const box = document.createElement('details');
+  box.className = 'srcbox';
+  const used = cited && cited.length ? sources.filter(s => cited.includes(s.label)) : sources;
+  box.innerHTML = `<summary>منابع استفاده‌شده (${used.length} از ${sources.length} قطعه‌ی بازیابی‌شده) — برای دیدن متن اصلی باز کنید</summary>`;
+  for (const s of sources) {
+    const pages = s.page_start === s.page_end ? `صفحه ${s.page_start}` : `صفحات ${s.page_start}–${s.page_end}`;
+    const div = document.createElement('div');
+    div.className = 'src';
+    div.id = node.dataset.mid + '-' + s.label;
+    const isCited = !cited || !cited.length || cited.includes(s.label);
+    div.innerHTML = `<div class="h">[${s.label}] «${esc(s.doc_title)}» — ${pages}${s.section ? ' — ' + esc(s.section) : ''}${isCited ? '' : ' <span style="color:var(--muted);font-weight:400">(استناد نشده)</span>'}</div>
+      <div class="b">${esc(s.text)}</div><span class="more">نمایش کامل</span>`;
+    div.querySelector('.more').onclick = () => {
+      div.classList.toggle('open');
+      div.querySelector('.more').textContent = div.classList.contains('open') ? 'بستن' : 'نمایش کامل';
+    };
+    box.appendChild(div);
+  }
+  node.appendChild(box);
+  return box;
+}
+
+async function ask(text){
+  busy = true; $('#send').disabled = true;
+  $('#empty')?.remove();
+  addMsg('user', esc(text));
+  const mid = 'm' + Date.now();
+  const node = addMsg('assistant', '<span class="stage">در حال جستجو در اسناد…</span>');
+  node.dataset.mid = mid;
+  const bubble = node.querySelector('.bubble');
+
+  const picked = [...document.querySelectorAll('.pick:checked')].map(c => c.value);
+  const scoped = $('#scoped').checked && picked.length && picked.length < docsCache.length;
+
+  let sources = [], answer = '', started = false, abstained = false;
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question: text, history, doc_ids: scoped ? picked : null })
+    });
+    const reader = res.body.getReader();
+    const dec = new TextDecoder();
+    let buf = '';
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      const parts = buf.split('\n\n');
+      buf = parts.pop();
+      for (const p of parts) {
+        const line = p.split('\n').find(l => l.startsWith('data:'));
+        if (!line) continue;
+        const ev = JSON.parse(line.slice(5));
+        if (ev.type === 'stage') {
+          bubble.innerHTML = `<span class="stage">${ev.stage === 'retrieving' ? 'در حال جستجو در اسناد…' : 'در حال نوشتن پاسخ…'}</span>`;
+        } else if (ev.type === 'sources') {
+          sources = ev.sources;
+          abstained = !!ev.abstain;
+          $('#stage').textContent = ev.reranked ? 'بازرتبه‌بندی انجام شد' : '';
+        } else if (ev.type === 'token') {
+          if (!started) { bubble.innerHTML = ''; started = true; }
+          answer += ev.text;
+          bubble.innerHTML = renderMd(answer);
+          $('#chat').scrollTop = $('#chat').scrollHeight;
+        } else if (ev.type === 'done') {
+          bubble.innerHTML = renderMd(ev.answer || answer);
+          if (sources.length) renderSources(node, sources, ev.cited);
+          else if (abstained) {
+            const n = document.createElement('div');
+            n.className = 'stage';
+            n.style.marginTop = '8px';
+            n.textContent = 'هیچ بخشی از اسناد به این پرسش مرتبط نبود، بنابراین از مدل پاسخی خواسته نشد.';
+            node.appendChild(n);
+          }
+          history.push({ role: 'user', content: text });
+          history.push({ role: 'assistant', content: (ev.answer || answer).slice(0, 1200) });
+          history = history.slice(-8);
+        } else if (ev.type === 'error') {
+          bubble.innerHTML = `<div class="banner" style="margin:0">${esc(ev.message)}</div>`;
+        }
+      }
+    }
+  } catch (err) {
+    bubble.innerHTML = `<div class="banner" style="margin:0">خطای ارتباط: ${esc(String(err))}</div>`;
+  }
+  busy = false; $('#send').disabled = false; $('#stage').textContent = '';
+  $('#chat').scrollTop = $('#chat').scrollHeight;
+}
+
+document.addEventListener('click', e => {
+  const btn = e.target.closest('.cite');
+  if (!btn) return;
+  const msg = btn.closest('.msg');
+  const box = msg.querySelector('.srcbox');
+  if (box) box.open = true;
+  const target = document.getElementById(msg.dataset.mid + '-S' + btn.dataset.s);
+  if (target) {
+    document.querySelectorAll('.src.hl').forEach(x => x.classList.remove('hl'));
+    target.classList.add('hl');
+    target.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }
+});
+
+async function patch(body){ await fetch('/api/config', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) }); }
+$('#mq').onchange = e => patch({ multi_query: e.target.checked });
+$('#rr').onchange = e => patch({ use_reranker: e.target.checked });
+
+$('#cancelall').onclick = cancelAll;
+refreshDocs(); refreshStatus(); pollJobs();
+setInterval(refreshStatus, 15000);
+</script>
+</body>
+</html>
