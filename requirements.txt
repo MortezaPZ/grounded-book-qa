@@ -1,0 +1,14 @@
+fastapi
+uvicorn[standard]
+python-multipart
+pymupdf
+python-docx
+numpy
+httpx
+sentence-transformers
+torch
+
+# optional
+# pytesseract        # OCR for scanned PDFs (needs Tesseract + fas.traineddata)
+# pillow
+# llama-cpp-python   # in-process GGUF backend

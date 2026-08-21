@@ -1,0 +1,22 @@
+.venv/
+__pycache__/
+*.pyc
+
+# مدل‌های زبانی سنگین — کاربر خودش دانلود می‌کند
+models/*.gguf
+models/*.part
+models/bge-reranker-base/
+models/bge-reranker-v2-m3/
+models/multilingual-e5-base/
+
+# داده‌ها و ایندکس شخصی
+data/uploads/*
+data/index/*
+!data/uploads/.gitkeep
+!data/index/.gitkeep
+
+*.log
+
+# فایل‌های محلی آماده‌سازی انتشار
+CURSOR_TASK.md
+.claude/
