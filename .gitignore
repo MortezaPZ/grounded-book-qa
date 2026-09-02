@@ -18,5 +18,3 @@ data/index/*
 *.log
 
 # فایل‌های محلی آماده‌سازی انتشار
-CURSOR_TASK.md
-.claude/
