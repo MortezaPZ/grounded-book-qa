@@ -1,12 +1,12 @@
-fastapi
-uvicorn[standard]
-python-multipart
-pymupdf
-python-docx
-numpy
-httpx
-sentence-transformers
-torch
+fastapi>=0.143,<1
+uvicorn[standard]>=0.54,<1
+python-multipart>=0.0.20
+pymupdf>=1.28,<2
+python-docx>=1.2,<2
+numpy>=2.2,<3
+httpx>=0.28,<1
+sentence-transformers>=6.1.0,<6.2
+torch>=2.14.1,<2.15
 
 # optional
 # pytesseract        # OCR for scanned PDFs (needs Tesseract + fas.traineddata)
