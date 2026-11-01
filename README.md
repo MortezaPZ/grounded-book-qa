@@ -101,6 +101,13 @@ Some PDF generators store one Persian letter pair in reverse order. The loader w
 
 The production embedder and reranker are large downloads. A smaller local model is enough to prove the pipeline.
 
+## Folder guides
+
+- [`app/`](<app/README.md>)
+- [`data/`](<data/README.md>)
+- [`scripts/`](<scripts/README.md>)
+- [`web/`](<web/README.md>)
+
 ## License
 
 MIT. See [LICENSE](LICENSE).
